@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SeniorDev: the life of a pull request</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Figtree:wght@400;600&display=swap">
+<style>
+:root{--bg:#eef0f7;--fg:#14172b;--bt:#fff;--bd:#c9cfe2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#070a14;--fg:#e8ebf7;--bt:#151a2e;--bd:#2b3354}}
+:root[data-theme="dark"]{--bg:#070a14;--fg:#e8ebf7;--bt:#151a2e;--bd:#2b3354}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:Figtree,system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:12px}
+#frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:16px;background:radial-gradient(circle at 20% 10%,#18204a 0,#0b1020 55%);border:1px solid #232c55}
+#frame:fullscreen{aspect-ratio:auto;width:100vw;height:100vh;border-radius:0}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;color:#e8ebf7}
+#stage:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#2a335f 1.2px,transparent 1.2px);background-size:28px 28px;opacity:.55}
+h1{position:absolute;left:30px;top:26px;margin:0;font:800 44px/1 "Bricolage Grotesque",sans-serif;background:linear-gradient(90deg,#4d8dff,#e04bd8,#ff7a59);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sb{position:absolute;left:32px;top:82px;width:380px;font-size:17px;line-height:1.35;color:#aab3d6}
+.n{position:absolute;display:flex;flex-direction:column;border:2px solid var(--c);border-radius:16px;background:color-mix(in srgb,var(--c) 9%,#0b1020);padding:11px 13px;opacity:.42;filter:saturate(.5);transition:opacity .4s,filter .4s,transform .4s}
+.n.on,.n.done{opacity:1;filter:none}
+.n.on{transform:scale(1.025);animation:glow 1.4s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 30%,transparent),0 0 18px var(--c)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 22%,transparent),0 0 40px var(--c)}}
+h3{margin:0 0 7px;font:700 16px/1.15 "Bricolage Grotesque",sans-serif;color:var(--c)}
+.sub{list-style:none;margin:0;padding:0}
+.sub li{position:relative;padding:2px 0 2px 21px;font-size:13px;line-height:1.25;color:#7f89b0;transition:color .3s}
+.sub li:before{content:"";position:absolute;left:3px;top:6px;width:9px;height:9px;border-radius:50%;border:2px solid #4a5483;transition:.3s}
+.sub li.t{color:#eef1ff}
+.sub li.t:before{background:var(--c);border-color:var(--c);box-shadow:0 0 8px var(--c)}
+.lb{margin:9px 0 3px;font-size:12px;font-weight:600;color:var(--c)}
+.bd{align-self:flex-start;margin:-2px 0 7px;padding:1px 8px;border-radius:99px;background:var(--c);color:#0b1020;font-size:11.5px;font-weight:600}
+.iow{margin-top:auto;padding-top:8px}
+.io{font-size:11.5px;line-height:1.3;color:#c8cfee;margin-top:4px;opacity:0;transition:opacity .5s}
+.n.on .io,.n.done .io{opacity:1}
+.io b{display:inline-block;margin-right:6px;padding:0 6px;border-radius:5px;background:var(--c);color:#0b1020;font-size:10.5px}
+#open{margin-top:8px;padding:9px 6px;border:0;border-radius:10px;background:#4d8dff;color:#06102a;font:700 15px "Bricolage Grotesque",sans-serif;cursor:pointer;animation:pulse 1.4s infinite}
+#open:hover{background:#7aa8ff}
+.n.on #open,.n.done #open{animation:none;background:#4be38a}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #4d8dffaa}70%,100%{box-shadow:0 0 0 14px #4d8dff00}}
+.cmt{margin-top:2px;padding:8px 10px;border-radius:10px;background:#0d2a1f;border:1px solid #2f8f5c;font-size:12px;line-height:1.35;color:#bff5d8;opacity:0;transition:opacity .6s}
+.n.on .cmt,.n.done .cmt{opacity:1}
+#stamp{position:absolute;right:-14px;top:-12px;padding:3px 10px;border:2px solid #e6d36a;border-radius:8px;background:#1d1a05;color:#e6d36a;font:800 14px "Bricolage Grotesque",sans-serif;transform:rotate(7deg) scale(0);transition:transform .35s cubic-bezier(.3,1.8,.5,1)}
+#stamp.show{transform:rotate(7deg) scale(1)}
+#cap{position:absolute;left:30px;top:528px;width:405px;height:160px;padding:14px 16px;border-radius:16px;background:#121a38;border:1px solid #2b3560}
+#cap h2{margin:0 0 6px;font:700 19px "Bricolage Grotesque",sans-serif;color:#fff}
+#cap p{margin:0;font-size:14.5px;line-height:1.42;color:#b7bfe0}
+svg{position:absolute;left:0;top:0;width:1280px;height:720px;pointer-events:none}
+.pth{fill:none;stroke:#46528a;stroke-width:2;stroke-dasharray:6 8;animation:fl 1s linear infinite}
+@keyframes fl{to{stroke-dashoffset:-14}}
+.toast{font:700 15px "Bricolage Grotesque",sans-serif;animation:rise 1.9s ease-out forwards;text-anchor:middle}
+@keyframes rise{0%{opacity:0;transform:translateY(8px)}15%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}
+.cf{animation:burst 1.4s ease-out forwards}
+@keyframes burst{to{transform:translate(var(--dx),var(--dy));opacity:0}}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:12px}
+.ctl button,.ctl select{padding:8px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--bt);color:var(--fg);font:600 14px Figtree,sans-serif;cursor:pointer}
+.ctl button:focus-visible,.ctl select:focus-visible,#open:focus-visible{outline:3px solid #7aa8ff;outline-offset:2px}
+#dots{display:flex;gap:6px;margin:0 6px}
+#dots i{width:11px;height:11px;border-radius:50%;background:var(--bd);cursor:pointer;transition:.3s}
+#dots i.a{background:#4d8dff;transform:scale(1.35)}
+#dots i.p{background:#4be38a}
+.hint{text-align:center;font-size:13px;opacity:.65;margin-top:8px}
+@media (prefers-reduced-motion:reduce){.pth,.n.on,#open{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="frame"><div id="stage">
+<h1>SeniorDev</h1>
+<div class="sb">Follow one pull request from the first click to a verified fix.</div>
+<div id="cap"><h2></h2><p></p></div>
+<svg id="sv">
+<path class="pth" id="a" d="M160 345 L200 345"/>
+<path class="pth" id="b1" d="M410 345 C435 345 435 195 460 195"/>
+<path class="pth" id="b2" d="M410 345 C435 345 435 510 460 510"/>
+<path class="pth" id="c1" d="M690 195 C715 195 715 330 740 330"/>
+<path class="pth" id="c2" d="M690 530 C715 530 715 410 740 410"/>
+<path class="pth" id="d" d="M960 330 C985 330 985 200 1010 200"/>
+<path class="pth" id="e" d="M1010 270 C985 270 985 420 960 420"/>
+<path class="pth" id="f" d="M960 485 L1010 485"/>
+<path class="pth" id="g" d="M1130 570 L1130 600"/>
+<g id="pk"></g><g id="fx"></g>
+</svg>
+</div></div>
+<div class="ctl">
+<button id="prev" aria-label="Previous step">Back</button>
+<button id="play">Play</button>
+<button id="next" aria-label="Next step">Next</button>
+<div id="dots"></div>
+<button id="rst">Restart</button>
+<select id="spd" aria-label="Speed"><option value=".7">Slow</option><option value="1" selected>Normal</option><option value="1.6">Fast</option></select>
+<button id="fs">Fullscreen</button>
+</div>
+<div class="hint">Click Open PR, or use the arrow keys and space bar. In fullscreen the Open PR button starts the show.</div>
+</div>
+<script>
+const NS="http://www.w3.org/2000/svg",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const N=[
+{id:'pr',c:'#9aa3c7',x:30,y:290,w:130,h:112,t:'GitHub pull request',s:[],i:'new code pushed',o:'diff + repo',x_:'<button id="open">Open PR</button>'},
+{id:'idx',c:'#4d8dff',x:200,y:190,w:210,h:310,t:'1 Repository Indexing',s:['Diff Parser','AST Generator','Call Graph + Data Flow','Metadata Extractor'],i:'PR diff + repo',o:'one shared code graph that every module reuses'},
+{id:'perf',c:'#ff7a59',x:460,y:60,w:230,h:270,t:'2 Performance Analysis',s:['Feature Extractor','Complexity Classifier (fine-tuned)','Regression Detector'],i:'code graph',o:'complexity and regression flags, e.g. O(n) to O(n²)'},
+{id:'sec',c:'#4be38a',x:460,y:390,w:230,h:290,t:'3 Security Analysis',s:['Static Scanner (Semgrep)','Reachability Filter','Vulnerability Classifier (fine-tuned)','CWE / CVE Mapper'],i:'code graph',o:'reachable vulnerability findings with CWE labels'},
+{id:'sbx',c:'#e6d36a',x:740,y:190,w:220,h:360,t:'5 Verification Sandbox',b:'no AI, fully deterministic',s:['Docker container','Runtime Security Enforcer','Deterministic Input Generator','Dual-Pillar Executor','Metrics Extractor + Cleanup'],s2:['Apply the patch + run tests','Re-scan with Semgrep','Profile on scaled inputs'],i:'flags + findings, later candidate fixes',o:'confirmed findings, verified fixes, metrics'},
+{id:'rag',c:'#e04bd8',x:1010,y:40,w:240,h:330,t:'4 RAG Agent',s:['Preprocessing (finding-scoped)','Planner','Retrieval (dense + lexical + graph)','Reranker','Evidence Checker (sufficient / abstain)','Generator + Confidence Estimator','Agent Tools'],i:'confirmed finding + evidence',o:'cited explanation + candidate fix'},
+{id:'dash',c:'#5fd6e8',x:1010,y:400,w:240,h:170,t:'6 Dashboard + CI/CD Gate',s:['Unified Findings View','Merge Gate Decision','Notifications (bonus)'],i:'explanation + fix status',o:'merge decision for the PR'},
+{id:'rep',c:'#c9d1ff',x:1010,y:600,w:240,h:100,t:'Developer Report',s:[],x_:'<div class="cmt">Verified fix, O(n²) now O(n). 1 false positive dropped. (example)</div>'}
+];
+$('#stage').insertAdjacentHTML('beforeend',N.map(n=>`<div class="n" id="${n.id}" style="--c:${n.c};left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px"><h3>${n.t}</h3>${n.b?`<div class="bd">${n.b}</div>`:''}<ul class="sub s1">${n.s.map(s=>`<li>${s}`).join('')}</ul>${n.s2?`<div class="lb">Then, for each proposed fix</div><ul class="sub s2">${n.s2.map(s=>`<li>${s}`).join('')}</ul>`:''}${n.x_||''}${n.i?`<div class="iow"><div class="io"><b>IN</b>${n.i}</div><div class="io"><b>OUT</b>${n.o}</div></div>`:''}${n.id=='sbx'?'<div id="stamp"></div>':''}</div>`).join(''));
+$('#stage').appendChild($('#sv'));
+let tok=0,auto=false,running=false,speed=1,cur=0;
+const sleep=ms=>new Promise((res,rej)=>{const my=tok;let t=0,l=performance.now();(function f(n){if(my!==tok)return rej('x');t+=(n-l)*speed;l=n;t>=ms?res():requestAnimationFrame(f)})(l)});
+const act=id=>{const e=$('#'+id);e.classList.remove('done');e.classList.add('on')},fin=id=>{const e=$('#'+id);e.classList.remove('on');e.classList.add('done')};
+async function tick(id,sel='.s1',gap=360){for(const li of $$('#'+id+' '+sel+' li')){await sleep(gap);li.classList.add('t')}}
+function move(sym,col,pid,ms=950,delay=0){return new Promise(async(res,rej)=>{const my=tok,p=$('#'+pid),L=p.getTotalLength(),g=document.createElementNS(NS,'g');g.style.filter=`drop-shadow(0 0 9px ${col})`;g.innerHTML=`<circle r="17" fill="${col}" opacity=".3"/><circle r="12" fill="${col}"/><text y="5" text-anchor="middle" font-size="14">${sym}</text>`;g.setAttribute('transform','scale(0)');$('#pk').appendChild(g);
+try{if(delay)await sleep(delay)}catch(e){g.remove();return rej(e)}
+let t=0,l=performance.now();(function f(n){if(my!==tok){g.remove();return rej('x')}t+=(n-l)*speed;l=n;const k=Math.min(t/ms,1),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2,pt=p.getPointAtLength(L*e),s=k<.15?k/.15:k>.85?(1-k)/.15:1;g.setAttribute('transform',`translate(${pt.x} ${pt.y}) scale(${Math.max(s,.01)})`);if(k<1)requestAnimationFrame(f);else{g.remove();res()}})(l)})}
+function toast(txt,x,y,col){const t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('fill',col);t.setAttribute('class','toast');t.textContent=txt;$('#fx').appendChild(t);setTimeout(()=>t.remove(),2000)}
+function confetti(){const cs=['#4d8dff','#e04bd8','#ff7a59','#4be38a','#e6d36a'];for(let i=0;i<30;i++){const c=document.createElementNS(NS,'circle'),a=Math.random()*Math.PI*2,d=70+Math.random()*130;c.setAttribute('cx',1130);c.setAttribute('cy',650);c.setAttribute('r',3+Math.random()*4);c.setAttribute('fill',cs[i%5]);c.setAttribute('class','cf');c.style.setProperty('--dx',Math.cos(a)*d+'px');c.style.setProperty('--dy',Math.sin(a)*d-40+'px');$('#fx').appendChild(c);setTimeout(()=>c.remove(),1500)}}
+const stamp=t=>{const s=$('#stamp');if(t){s.textContent=t;s.classList.add('show')}else s.classList.remove('show')};
+const C={pr:'#9aa3c7',idx:'#4d8dff',perf:'#ff7a59',sec:'#4be38a',sbx:'#e6d36a',rag:'#e04bd8',dash:'#5fd6e8',rep:'#c9d1ff'};
+const S=[
+{t:'Ready when you are',c:'Click Open PR to send a pull request through the system. Each card lights up with what goes in and what comes out.',ns:[],run:async()=>{}},
+{t:'A developer opens a pull request',c:'GitHub Actions fires a webhook and hands the diff and repo snapshot to SeniorDev.',ns:['pr'],run:async()=>{act('pr');await sleep(700);await move('🔀',C.pr,'a',800)}},
+{t:'The code is parsed once',c:'The diff becomes an AST, a call graph, a data-flow graph and metadata. Every later module reads this same shared graph.',ns:['idx'],run:async()=>{act('idx');await tick('idx');await sleep(500)}},
+{t:'Two specialists work in parallel',c:'Performance asks whether the code got slower. Security asks whether a vulnerability can really be reached from an entry point.',ns:['perf','sec'],run:async()=>{await Promise.all([move('🕸',C.idx,'b1'),move('🕸',C.idx,'b2')]);act('perf');act('sec');await Promise.all([tick('perf'),tick('sec')]);await sleep(400)}},
+{t:'The sandbox runs the code and decides',c:'No AI here. Docker runs real inputs, confirms genuine findings and drops false positives. Only confirmed findings move on, with their evidence.',ns:['sbx'],run:async()=>{await Promise.all([move('🐢',C.perf,'c1'),move('🛡',C.sec,'c2'),move('👻','#8d96c0','c2',950,260)]);act('sbx');await tick('sbx');toast('1 false positive dropped',850,170,'#ff7a7a');await sleep(500);stamp('CONFIRMED');await sleep(900)}},
+{t:'The RAG agent explains and proposes a fix',c:'It retrieves code, call graph, CWE/CVE and test output for this one finding. If the evidence is not enough, it says so instead of guessing.',ns:['rag'],run:async()=>{stamp(null);await move('✅',C.sbx,'d');act('rag');await tick('rag','.s1',330);toast('evidence sufficient',1130,32,'#e04bd8');await sleep(700)}},
+{t:'Every fix is checked before anyone sees it',c:'The candidate fix goes back to the sandbox. It is patched in, tested, re-scanned and profiled. Only then is it marked verified.',ns:['sbx'],run:async()=>{await move('💡',C.rag,'e');act('sbx');await tick('sbx','.s2',520);stamp('VERIFIED');toast('fix passed all checks',850,170,'#e6d36a');await sleep(1000)}},
+{t:'Results land in one dashboard',c:'Security and performance findings, explanations and verification status sit side by side. The merge gate decides whether the PR can go ahead.',ns:['dash'],run:async()=>{await move('📊',C.sbx,'f',700);act('dash');await tick('dash','.s1',420);await sleep(500)}},
+{t:'The developer gets a report on the PR',c:'A short, cited explanation and a fix status that was proven by execution. That is the point of SeniorDev.',ns:['rep'],run:async()=>{await move('📋',C.dash,'g',600);act('rep');confetti();await sleep(1200)}}
+];
+function rebuild(i){$$('.n').forEach(n=>n.classList.remove('on','done'));$$('.sub li').forEach(l=>l.classList.remove('t'));$('#fx').innerHTML='';$('#pk').innerHTML='';
+for(let k=0;k<i;k++)S[k].ns.forEach(id=>{fin(id);$$('#'+id+' .s1 li').forEach(l=>l.classList.add('t'));if(k>=6&&id=='sbx')$$('#sbx .s2 li').forEach(l=>l.classList.add('t'))});
+if(i>=7)stamp('VERIFIED');else if(i>=5)stamp('CONFIRMED');else stamp(null)}
+const dots=$('#dots');S.forEach((s,i)=>{const d=document.createElement('i');d.title=s.t;d.onclick=()=>{auto=false;go(i)};dots.appendChild(d)});
+function upd(){$$('#dots i').forEach((d,i)=>{d.className=i==cur?'a':i<cur?'p':''});$('#cap h2').textContent=S[cur].t;$('#cap p').textContent=S[cur].c;$('#play').textContent=auto?'Pause':(cur==S.length-1&&!running?'Replay':'Play')}
+async function go(i){tok++;const my=tok;cur=Math.max(0,Math.min(S.length-1,i));rebuild(cur);running=true;upd();
+try{await S[cur].run();if(my!==tok)return;S[cur].ns.forEach(fin);if(cur>=6&&cur<8)$$('#sbx .s2 li').forEach(l=>l.classList.add('t'));
+if(cur<S.length-1){await sleep(900);if(auto)return go(cur+1)}else auto=false;running=false;upd()}catch(e){}}
+$('#next').onclick=()=>{auto=false;go(cur+1)};$('#prev').onclick=()=>{auto=false;go(cur-1)};
+$('#rst').onclick=()=>{auto=false;go(0)};
+$('#play').onclick=()=>{if(auto){auto=false;upd();return}auto=true;if(cur==S.length-1&&!running||cur==0)go(1);else if(!running)go(cur+1);else upd()};
+$('#open').onclick=()=>{auto=true;go(1)};
+$('#spd').onchange=e=>speed=+e.target.value;
+$('#fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():$('#frame').requestFullscreen&&$('#frame').requestFullscreen();
+addEventListener('keydown',e=>{if(e.key=='ArrowRight')$('#next').click();else if(e.key=='ArrowLeft')$('#prev').click();else if(e.key==' '&&e.target.tagName!='BUTTON'){e.preventDefault();$('#play').click()}else if(e.key=='r')$('#rst').click()});
+function fit(){const f=$('#frame'),s=Math.min(f.clientWidth/1280,f.clientHeight/720);$('#stage').style.transform=`scale(${s})`;$('#stage').style.left=(f.clientWidth-1280*s)/2+'px';$('#stage').style.top=(f.clientHeight-720*s)/2+'px'}
+new ResizeObserver(fit).observe($('#frame'));addEventListener('resize',fit);fit();upd();
+</script>
+</body>
+</html>
