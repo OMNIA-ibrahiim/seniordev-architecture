@@ -101,7 +101,7 @@ svg{position:absolute;left:0;top:0;width:1280px;height:720px;pointer-events:none
 const NS="http://www.w3.org/2000/svg",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const N=[
 {id:'in',c:'#51608a',x:30,y:100,w:140,h:230,t:'Input',s:['Source code','PR diff / changed files']},
-{id:'sa',c:'#12a37f',x:195,y:100,w:240,h:240,t:'1 Static Analysis',l1:'Run static scanners',s:['Semgrep','Trivy','Checkov, etc.'],l2:'Produces findings',s2:['Type','Location','CWE','Severity']},
+{id:'sa',c:'#12a37f',x:195,y:100,w:240,h:260,t:'1 Static Analysis',l1:'Run static scanners',s:['Semgrep','Trivy','Checkov, etc.'],l2:'Produces findings',s2:['Type','Location','CWE','Severity']},
 {id:'pa',c:'#e8643a',x:460,y:100,w:250,h:230,t:'2 Program Analysis',s:['Call graph generation (Joern)','Data flow analysis (sources to sinks)','Reachability analysis (entry points to vulnerable code)']},
 {id:'cx',c:'#7c4dff',x:735,y:100,w:235,h:230,t:'3 Context Building',s:['Build context for each finding (call graph + data flow + reachability)','Feature representation (code + findings + program context)']},
 {id:'vc',c:'#2f6df6',x:735,y:380,w:235,h:230,t:'4 Vulnerability Classification',s:['ML model (GraphCodeBERT)','Predict: vulnerable / not vulnerable','Confidence score']},
