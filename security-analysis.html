@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SeniorDev: Security Analysis architecture</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#eef4ff;--fg:#14235c;--bt:#fff;--bd:#c3d4f5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#070a14;--fg:#e8ebf7;--bt:#151a2e;--bd:#2b3354}}
+:root[data-theme="dark"]{--bg:#070a14;--fg:#e8ebf7;--bt:#151a2e;--bd:#2b3354}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Source Sans 3",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:12px}
+#frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;cursor:pointer;border-radius:16px;background:linear-gradient(120deg,#9fcbff 0%,#d9e9ff 38%,#f3f8ff 72%);border:1px solid #bcd3f7}
+#frame:fullscreen{aspect-ratio:auto;width:100vw;height:100vh;border-radius:0}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;color:#14235c}
+#stage:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#9db8e8 1.2px,transparent 1.2px);background-size:28px 28px;opacity:.6}
+h1{position:absolute;left:84px;top:26px;margin:0;font:800 44px/1 "Space Grotesk",sans-serif;background:linear-gradient(90deg,#14235c,#2f6df6 55%,#12a8c9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sb{position:absolute;left:86px;top:82px;width:345px;font-size:17px;line-height:1.35;color:#46578c}
+.n{position:absolute;display:flex;flex-direction:column;border:2px solid var(--c);border-radius:16px;background:color-mix(in srgb,var(--c) 8%,#fff);padding:11px 13px;opacity:.5;filter:saturate(.6);box-shadow:0 4px 14px #1b3a8a1a;transition:opacity .4s,filter .4s,transform .4s}
+.n.on,.n.done{opacity:1;filter:none}
+.n.on{transform:scale(1.025);animation:glow 1.4s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 30%,transparent),0 0 16px color-mix(in srgb,var(--c) 55%,transparent)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 22%,transparent),0 0 34px color-mix(in srgb,var(--c) 60%,transparent)}}
+h3{margin:0 0 7px;font:700 16px/1.15 "Space Grotesk",sans-serif;color:var(--c)}
+.sub{list-style:none;margin:0;padding:0}
+.sub li{position:relative;padding:2px 0 2px 21px;font-size:13px;line-height:1.25;color:#6b7aa8;transition:color .3s}
+.sub li:before{content:"";position:absolute;left:3px;top:6px;width:9px;height:9px;border-radius:50%;border:2px solid #a9b9de;transition:.3s}
+.sub li.t{color:#14235c}
+.sub li.t:before{background:var(--c);border-color:var(--c);box-shadow:0 0 6px color-mix(in srgb,var(--c) 60%,transparent)}
+.lb{margin:9px 0 3px;font-size:12px;font-weight:600;color:var(--c)}
+.bd{align-self:flex-start;margin:-2px 0 7px;padding:1px 8px;border-radius:99px;background:var(--c);color:#fff;font-size:11.5px;font-weight:600}
+.iow{margin-top:auto;padding-top:8px}
+.io{font-size:11.5px;line-height:1.3;color:#33457d;margin-top:4px;opacity:0;transition:opacity .5s}
+.n.on .io,.n.done .io{opacity:1}
+.io b{display:inline-block;margin-right:6px;padding:0 6px;border-radius:5px;background:var(--c);color:#fff;font-size:10.5px}
+#open{margin-top:8px;padding:9px 6px;border:0;border-radius:10px;background:#2f6df6;color:#fff;font:700 15px "Space Grotesk",sans-serif;cursor:pointer;animation:pulse 1.4s infinite}
+#open:hover{background:#5a8cff}
+.n.on #open,.n.done #open{animation:none;background:#12a37f}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #2f6df6aa}70%,100%{box-shadow:0 0 0 14px #2f6df600}}
+.cmt{margin-top:2px;padding:8px 10px;border-radius:10px;background:#e6f8f1;border:1px solid #12a37f;font-size:12px;line-height:1.35;color:#0b5c46;opacity:0;transition:opacity .6s}
+.n.on .cmt,.n.done .cmt{opacity:1}
+#stamp{position:absolute;right:-14px;top:-12px;padding:3px 10px;border:2px solid #b87f00;border-radius:8px;background:#fff6d6;color:#8a5f00;font:800 14px "Space Grotesk",sans-serif;transform:rotate(7deg) scale(0);transition:transform .35s cubic-bezier(.3,1.8,.5,1)}
+#stamp.show{transform:rotate(7deg) scale(1)}
+#cap{position:absolute;left:995px;top:100px;width:265px;height:350px;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid #c3d4f5;box-shadow:0 6px 18px #1b3a8a1f}
+.opt{border-style:dashed}
+#cap b{display:inline-block;margin-right:6px;padding:0 6px;border-radius:5px;background:#2f6df6;color:#fff;font-size:10.5px}
+.fr{border-style:dashed;pointer-events:none}.fr.on{transform:none;animation:none}
+.sub li.x{color:#d93b3b;text-decoration:line-through}.sub li.x:before{background:#d93b3b;border-color:#d93b3b}
+#nx{position:absolute;right:16px;bottom:10px;font-size:12.5px;font-weight:700;color:#2f6df6}
+#cap h2{margin:0 0 6px;font:700 19px "Space Grotesk",sans-serif;color:#14235c}
+#cap p{margin:0;font-size:14.5px;line-height:1.42;color:#41537f}
+svg{position:absolute;left:0;top:0;width:1280px;height:720px;pointer-events:none}
+.pth{fill:none;stroke:#8fa9dd;stroke-width:2;stroke-dasharray:6 8;animation:fl 1s linear infinite}
+@keyframes fl{to{stroke-dashoffset:-14}}
+.toast{font:700 15px "Space Grotesk",sans-serif;animation:rise 1.9s ease-out forwards;text-anchor:middle}
+@keyframes rise{0%{opacity:0;transform:translateY(8px)}15%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}
+.cf{animation:burst 1.4s ease-out forwards}
+@keyframes burst{to{transform:translate(var(--dx),var(--dy));opacity:0}}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:12px}
+.ctl button,.ctl select{padding:8px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--bt);color:var(--fg);font:600 14px "Source Sans 3",sans-serif;cursor:pointer}
+.ctl button:focus-visible,.ctl select:focus-visible,#open:focus-visible{outline:3px solid #7aa8ff;outline-offset:2px}
+#dots{display:flex;gap:6px;margin:0 6px}
+#dots i{width:11px;height:11px;border-radius:50%;background:var(--bd);cursor:pointer;transition:.3s}
+#dots i.a{background:#2f6df6;transform:scale(1.35)}
+#dots i.p{background:#12a37f}
+.hint{text-align:center;font-size:13px;opacity:.65;margin-top:8px}
+.emb body{background:transparent}.emb .wrap{padding:0;max-width:none}.emb #frame{aspect-ratio:auto;height:100vh;border-radius:0;border:0}.emb .hint{display:none}.emb .ctl{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);margin:0;z-index:5;padding:5px 8px;border-radius:14px;background:#ffffffcc;backdrop-filter:blur(4px)}.emb .ctl button,.emb .ctl select{padding:5px 11px;font-size:13px}.emb #dots{display:none}
+@media (prefers-reduced-motion:reduce){.pth,.n.on,#open{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="frame"><div id="stage">
+<h1>Security Analysis</h1>
+<div class="sb"></div>
+<div id="cap"><h2></h2><p></p><div id="nx"></div></div>
+<svg id="sv">
+<path class="pth" id="i1" d="M170 215 L195 215"/>
+<path class="pth" id="a1" d="M435 215 L460 215"/>
+<path class="pth" id="a2" d="M710 215 L735 215"/>
+<path class="pth" id="c1" d="M852 330 L852 380"/>
+<path class="pth" id="v1" d="M735 495 L710 495"/>
+<path class="pth" id="r1" d="M460 495 L435 495"/>
+<g id="pk"></g><g id="fx"></g>
+</svg>
+</div></div>
+<div class="ctl">
+<button id="prev" aria-label="Previous step">Back</button>
+<button id="play">Play</button>
+<button id="next" aria-label="Next step">Next</button>
+<div id="dots"></div>
+<button id="rst">Restart</button>
+<select id="spd" aria-label="Speed"><option value=".7">Slow</option><option value="1" selected>Normal</option><option value="1.6">Fast</option></select>
+<button id="fs">Fullscreen</button>
+</div>
+<div class="hint">Click the diagram to go one step forward. The arrow keys work too, and Auto-play runs the whole thing by itself.</div>
+</div>
+<script>
+const NS="http://www.w3.org/2000/svg",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const N=[
+{id:'in',c:'#51608a',x:30,y:100,w:140,h:230,t:'Input',s:['Source code','PR diff / changed files']},
+{id:'sa',c:'#12a37f',x:195,y:100,w:240,h:230,t:'1 Static Analysis',l1:'Run static scanners',s:['Semgrep','Trivy','Checkov, etc.'],l2:'Produces findings',s2:['Type','Location','CWE','Severity']},
+{id:'pa',c:'#e8643a',x:460,y:100,w:250,h:230,t:'2 Program Analysis',s:['Call graph generation (Joern)','Data flow analysis (sources to sinks)','Reachability analysis (entry points to vulnerable code)']},
+{id:'cx',c:'#7c4dff',x:735,y:100,w:235,h:230,t:'3 Context Building',s:['Build context for each finding (call graph + data flow + reachability)','Feature representation (code + findings + program context)']},
+{id:'vc',c:'#2f6df6',x:735,y:380,w:235,h:230,t:'4 Vulnerability Classification',s:['ML model (GraphCodeBERT)','Predict: vulnerable / not vulnerable','Confidence score']},
+{id:'rg',c:'#0aa5c8',x:460,y:380,w:250,h:230,t:'5 Result Generation',s:['Aggregate predictions per finding','Generate security report data']},
+{id:'ou',c:'#14235c',x:195,y:380,w:240,h:230,t:'Outputs',s:['Vulnerability findings (details, location, CWE, severity)','Classification result (vulnerable / not vulnerable)']},
+{id:'fd',k:'opt',c:'#b87f00',x:30,y:380,w:140,h:230,t:'Findings in this run (example)',s:['A: SQL injection (CWE-89)','B: XSS (CWE-79)','C: hardcoded secret (CWE-798)']}
+];
+$('#stage').insertAdjacentHTML('beforeend',N.map(n=>`<div class="n ${n.k||''}" id="${n.id}" style="--c:${n.c};left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px"><h3>${n.t}</h3>${n.b?`<div class="bd">${n.b}</div>`:''}${n.l1?`<div class="lb">${n.l1}</div>`:""}<ul class="sub s1">${n.s.map(s=>`<li>${s}`).join('')}</ul>${n.s2?`<div class="lb">${n.l2||""}</div><ul class="sub s2">${n.s2.map(s=>`<li>${s}`).join('')}</ul>`:''}${n.x_||''}${n.i?`<div class="iow"><div class="io"><b>IN</b>${n.i}</div><div class="io"><b>OUT</b>${n.o}</div></div>`:''}${n.id=='sbx'?'<div id="stamp"></div>':''}</div>`).join(''));
+$('#stage').appendChild($('#sv'));
+let tok=0,auto=false,running=false,speed=1,cur=0,fast=false;
+const sleep=ms=>fast?Promise.resolve():new Promise((res,rej)=>{const my=tok;let t=0,l=performance.now();(function f(n){if(my!==tok)return rej('x');t+=(n-l)*speed;l=n;t>=ms?res():requestAnimationFrame(f)})(l)});
+const act=id=>{const e=$('#'+id);e.classList.remove('done');e.classList.add('on')},fin=id=>{const e=$('#'+id);e.classList.remove('on');e.classList.add('done')};
+async function tick(id,sel='.s1',gap=360){for(const li of $$('#'+id+' '+sel+' li')){await sleep(gap);li.classList.add('t')}}
+function move(sym,col,pid,ms=950,delay=0){return new Promise(async(res,rej)=>{if(fast)return res();const my=tok,p=$('#'+pid),L=p.getTotalLength(),g=document.createElementNS(NS,'g');g.style.filter=`drop-shadow(0 0 9px ${col})`;g.innerHTML=`<circle r="17" fill="${col}" opacity=".3"/><circle r="12" fill="${col}"/><text y="5" text-anchor="middle" font-size="14">${sym}</text>`;g.setAttribute('transform','scale(0)');$('#pk').appendChild(g);
+try{if(delay)await sleep(delay)}catch(e){g.remove();return rej(e)}
+let t=0,l=performance.now();(function f(n){if(my!==tok){g.remove();return rej('x')}t+=(n-l)*speed;l=n;const k=Math.min(t/ms,1),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2,pt=p.getPointAtLength(L*e),s=k<.15?k/.15:k>.85?(1-k)/.15:1;g.setAttribute('transform',`translate(${pt.x} ${pt.y}) scale(${Math.max(s,.01)})`);if(k<1)requestAnimationFrame(f);else{g.remove();res()}})(l)})}
+function toast(txt,x,y,col){if(fast)return;const t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('fill',col);t.setAttribute('class','toast');t.textContent=txt;$('#fx').appendChild(t);setTimeout(()=>t.remove(),2000)}
+function confetti(){if(fast)return;const cs=['#2f6df6','#7c4dff','#e8643a','#12a37f','#b87f00'];for(let i=0;i<30;i++){const c=document.createElementNS(NS,'circle'),a=Math.random()*Math.PI*2,d=70+Math.random()*130;c.setAttribute('cx',1130);c.setAttribute('cy',650);c.setAttribute('r',3+Math.random()*4);c.setAttribute('fill',cs[i%5]);c.setAttribute('class','cf');c.style.setProperty('--dx',Math.cos(a)*d+'px');c.style.setProperty('--dy',Math.sin(a)*d-40+'px');$('#fx').appendChild(c);setTimeout(()=>c.remove(),1500)}}
+const stamp=t=>{const s=$('#stamp');if(t){s.textContent=t;s.classList.add('show')}else s.classList.remove('show')};
+const C={pr:'#51608a',idx:'#2f6df6',perf:'#e8643a',sec:'#12a37f',sbx:'#b87f00',rag:'#7c4dff',dash:'#0aa5c8',rep:'#14235c',app:'#5b6bd6'};
+const lit=(id,i,sel='.s1')=>{const l=$$('#'+id+' '+sel+' li')[i];l&&l.classList.add('t')};
+const dropx=(id,i)=>{const l=$$('#'+id+' li')[i];l&&l.classList.add('x')};
+const S=[
+{t:'Ready when you are',c:'Click anywhere to follow a pull request through the Security Analysis module. Three example findings travel through it.',ns:[],run:async()=>{}},
+{t:'Source code goes in',c:'The PR diff and the changed files are the only input.<br><b>IN</b> PR diff / changed files<br><b>OUT</b> source code to scan',ns:['in'],run:async()=>{act('in');await tick('in','.s1',450);await sleep(300)}},
+{t:'Static scanners run',c:'Scanners such as Semgrep, Trivy and Checkov run on the changed code. Each finding has a type, location, CWE and severity. This example finds three.<br><b>IN</b> source code<br><b>OUT</b> findings (type, location, CWE, severity)',ns:['sa','fd'],run:async()=>{await move('📄','#51608a','i1',500);act('sa');await Promise.all([tick('sa','.s1',400),tick('sa','.s2',300)]);act('fd');await tick('fd','.s1',250);toast('3 findings',315,92,'#12a37f');await sleep(500)}},
+{t:'Program analysis and reachability',c:'Joern builds the call graph and the data flow. Reachability then checks whether each finding can be reached from an entry point. Unreachable ones are dropped as false alarms.<br><b>IN</b> findings + code<br><b>OUT</b> call graph, data flow, reachable findings',ns:['pa'],run:async()=>{await Promise.all([move('🐞','#e8643a','a1',600,0),move('🐞','#7c4dff','a1',600,160),move('🐞','#12a37f','a1',600,320)]);act('pa');await tick('pa','.s1',700);dropx('fd',1);toast('B is unreachable: dropped',585,92,'#d93b3b');await sleep(900)}},
+{t:'Context for each finding',c:'For every remaining finding the module builds its context (call graph, data flow, reachability) and turns code + finding + program context into model features.<br><b>IN</b> reachable findings + program analysis<br><b>OUT</b> feature representation per finding',ns:['cx'],run:async()=>{await Promise.all([move('🐞','#e8643a','a2',600,0),move('🐞','#12a37f','a2',600,160)]);act('cx');await tick('cx','.s1',700);await sleep(400)}},
+{t:'The model classifies',c:'GraphCodeBERT predicts vulnerable or not vulnerable for each finding, with a confidence score. Here finding C is judged not vulnerable and dropped.<br><b>IN</b> features<br><b>OUT</b> prediction + confidence',ns:['vc'],run:async()=>{await Promise.all([move('🐞','#e8643a','c1',600,0),move('🐞','#12a37f','c1',600,160)]);act('vc');lit('vc',0);await sleep(500);lit('vc',1);await sleep(500);dropx('fd',2);toast('C: not vulnerable',852,372,'#d93b3b');await sleep(600);lit('vc',2);toast('A: vulnerable (example)',852,372,'#12a37f');await sleep(800)}},
+{t:'Results are assembled',c:'Predictions are aggregated per finding and turned into security report data.<br><b>IN</b> predictions + confidence<br><b>OUT</b> security report data',ns:['rg'],run:async()=>{await move('🐞','#e8643a','v1',600);act('rg');await tick('rg','.s1',500);await sleep(400)}},
+{t:'Outputs',c:'Out come the vulnerability findings (details, location, CWE, severity) and their classification. They go on to the Verification Sandbox next.<br><b>IN</b> security report data<br><b>OUT</b> findings + classification for the sandbox',ns:['ou'],run:async()=>{await move('🐞','#e8643a','r1',600);act('ou');await tick('ou','.s1',600);confetti();await sleep(700)}}
+];
+async function rebuild(i){$$('.n').forEach(n=>n.classList.remove('on','done'));$$('.sub li').forEach(l=>l.classList.remove('t','x'));$('#fx').innerHTML='';$('#pk').innerHTML='';fast=true;try{for(let k=0;k<i;k++){await S[k].run();S[k].ns.forEach(fin)}}finally{fast=false}}
+const dots=$('#dots');S.forEach((s,i)=>{const d=document.createElement('i');d.title=s.t;d.onclick=()=>{auto=false;go(i)};dots.appendChild(d)});
+function upd(){$$('#dots i').forEach((d,i)=>{d.className=i==cur?'a':i<cur?'p':''});$('#cap h2').textContent=S[cur].t;$('#cap p').innerHTML=S[cur].c;$('#play').textContent=auto?'Pause':(cur==S.length-1&&!running?'Replay':'Auto-play');$('#nx').textContent=cur==S.length-1?'That is the whole journey. Click to start over.':'Click anywhere for the next step'}
+async function go(i){tok++;const my=tok;cur=Math.max(0,Math.min(S.length-1,i));await rebuild(cur);if(my!==tok)return;running=true;upd();
+try{await S[cur].run();if(my!==tok)return;S[cur].ns.forEach(fin);if(cur>=6&&cur<8)$$('#sbx .s2 li').forEach(l=>l.classList.add('t'));
+if(auto&&cur<S.length-1){await sleep(900);if(auto)return go(cur+1)}if(cur==S.length-1)auto=false;running=false;upd()}catch(e){}}
+$('#next').onclick=()=>{auto=false;go(cur+1)};$('#prev').onclick=()=>{auto=false;go(cur-1)};
+$('#rst').onclick=()=>{auto=false;go(0)};
+$('#play').onclick=()=>{if(auto){auto=false;upd();return}auto=true;if(cur==S.length-1&&!running||cur==0)go(1);else if(!running)go(cur+1);else upd()};
+$('#frame').onclick=()=>{auto=false;go(cur<S.length-1?cur+1:0)};
+$('#spd').onchange=e=>speed=+e.target.value;
+$('#fs').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('#frame').requestFullscreen()}catch(e){window.open(location.href,'_blank')}};
+addEventListener('keydown',e=>{if(e.key=='ArrowRight')$('#next').click();else if(e.key=='ArrowLeft')$('#prev').click();else if(e.key==' '&&e.target.tagName!='BUTTON'){e.preventDefault();$('#play').click()}else if(e.key=='r')$('#rst').click()});
+function fit(){const f=$('#frame'),s=Math.min(f.clientWidth/1280,f.clientHeight/720);$('#stage').style.transform=`scale(${s})`;$('#stage').style.left=(f.clientWidth-1280*s)/2+'px';$('#stage').style.top=(f.clientHeight-720*s)/2+'px'}
+if(self!==top)document.documentElement.classList.add('emb');new ResizeObserver(fit).observe($('#frame'));addEventListener('resize',fit);fit();upd();
+</script>
+</body>
+</html>
