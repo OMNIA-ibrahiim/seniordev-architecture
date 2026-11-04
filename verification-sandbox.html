@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SeniorDev: Verification Sandbox architecture</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#eef4ff;--fg:#14235c;--bt:#fff;--bd:#c3d4f5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#070a14;--fg:#e8ebf7;--bt:#151a2e;--bd:#2b3354}}
+:root[data-theme="dark"]{--bg:#070a14;--fg:#e8ebf7;--bt:#151a2e;--bd:#2b3354}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Source Sans 3",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:12px}
+#frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;cursor:pointer;border-radius:16px;background:linear-gradient(120deg,#9fcbff 0%,#d9e9ff 38%,#f3f8ff 72%);border:1px solid #bcd3f7}
+#frame:fullscreen{aspect-ratio:auto;width:100vw;height:100vh;border-radius:0}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;color:#14235c}
+#stage:before{content:"";position:absolute;inset:0;background-image:radial-gradient(#9db8e8 1.2px,transparent 1.2px);background-size:28px 28px;opacity:.6}
+h1{position:absolute;left:84px;top:26px;margin:0;font:800 44px/1 "Space Grotesk",sans-serif;background:linear-gradient(90deg,#14235c,#2f6df6 55%,#12a8c9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sb{position:absolute;left:86px;top:82px;width:345px;font-size:17px;line-height:1.35;color:#46578c}
+.n{position:absolute;display:flex;flex-direction:column;border:2px solid var(--c);border-radius:16px;background:color-mix(in srgb,var(--c) 8%,#fff);padding:11px 13px;opacity:.5;filter:saturate(.6);box-shadow:0 4px 14px #1b3a8a1a;transition:opacity .4s,filter .4s,transform .4s}
+.n.on,.n.done{opacity:1;filter:none}
+.n.on{transform:scale(1.025);animation:glow 1.4s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 30%,transparent),0 0 16px color-mix(in srgb,var(--c) 55%,transparent)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 22%,transparent),0 0 34px color-mix(in srgb,var(--c) 60%,transparent)}}
+h3{margin:0 0 7px;font:700 16px/1.15 "Space Grotesk",sans-serif;color:var(--c)}
+.sub{list-style:none;margin:0;padding:0}
+.sub li{position:relative;padding:2px 0 2px 21px;font-size:13px;line-height:1.25;color:#6b7aa8;transition:color .3s}
+.sub li:before{content:"";position:absolute;left:3px;top:6px;width:9px;height:9px;border-radius:50%;border:2px solid #a9b9de;transition:.3s}
+.sub li.t{color:#14235c}
+.sub li.t:before{background:var(--c);border-color:var(--c);box-shadow:0 0 6px color-mix(in srgb,var(--c) 60%,transparent)}
+.lb{margin:9px 0 3px;font-size:12px;font-weight:600;color:var(--c)}
+.bd{align-self:flex-start;margin:-2px 0 7px;padding:1px 8px;border-radius:99px;background:var(--c);color:#fff;font-size:11.5px;font-weight:600}
+.iow{margin-top:auto;padding-top:8px}
+.io{font-size:11.5px;line-height:1.3;color:#33457d;margin-top:4px;opacity:0;transition:opacity .5s}
+.n.on .io,.n.done .io{opacity:1}
+.io b{display:inline-block;margin-right:6px;padding:0 6px;border-radius:5px;background:var(--c);color:#fff;font-size:10.5px}
+#open{margin-top:8px;padding:9px 6px;border:0;border-radius:10px;background:#2f6df6;color:#fff;font:700 15px "Space Grotesk",sans-serif;cursor:pointer;animation:pulse 1.4s infinite}
+#open:hover{background:#5a8cff}
+.n.on #open,.n.done #open{animation:none;background:#12a37f}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #2f6df6aa}70%,100%{box-shadow:0 0 0 14px #2f6df600}}
+.cmt{margin-top:2px;padding:8px 10px;border-radius:10px;background:#e6f8f1;border:1px solid #12a37f;font-size:12px;line-height:1.35;color:#0b5c46;opacity:0;transition:opacity .6s}
+.n.on .cmt,.n.done .cmt{opacity:1}
+#stamp{position:absolute;right:-14px;top:-12px;padding:3px 10px;border:2px solid #b87f00;border-radius:8px;background:#fff6d6;color:#8a5f00;font:800 14px "Space Grotesk",sans-serif;transform:rotate(7deg) scale(0);transition:transform .35s cubic-bezier(.3,1.8,.5,1)}
+#stamp.show{transform:rotate(7deg) scale(1)}
+#cap{position:absolute;left:225px;top:530px;width:830px;height:140px;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid #c3d4f5;box-shadow:0 6px 18px #1b3a8a1f}
+.opt{border-style:dashed}
+#cap b{display:inline-block;margin-right:6px;padding:0 6px;border-radius:5px;background:#2f6df6;color:#fff;font-size:10.5px}
+.fr{border-style:dashed;pointer-events:none}.fr.on{transform:none;animation:none}
+#nx{position:absolute;right:16px;bottom:10px;font-size:12.5px;font-weight:700;color:#2f6df6}
+#cap h2{margin:0 0 6px;font:700 19px "Space Grotesk",sans-serif;color:#14235c}
+#cap p{margin:0;font-size:14.5px;line-height:1.42;color:#41537f}
+svg{position:absolute;left:0;top:0;width:1280px;height:720px;pointer-events:none}
+.pth{fill:none;stroke:#8fa9dd;stroke-width:2;stroke-dasharray:6 8;animation:fl 1s linear infinite}
+@keyframes fl{to{stroke-dashoffset:-14}}
+.toast{font:700 15px "Space Grotesk",sans-serif;animation:rise 1.9s ease-out forwards;text-anchor:middle}
+@keyframes rise{0%{opacity:0;transform:translateY(8px)}15%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}
+.cf{animation:burst 1.4s ease-out forwards}
+@keyframes burst{to{transform:translate(var(--dx),var(--dy));opacity:0}}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:12px}
+.ctl button,.ctl select{padding:8px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--bt);color:var(--fg);font:600 14px "Source Sans 3",sans-serif;cursor:pointer}
+.ctl button:focus-visible,.ctl select:focus-visible,#open:focus-visible{outline:3px solid #7aa8ff;outline-offset:2px}
+#dots{display:flex;gap:6px;margin:0 6px}
+#dots i{width:11px;height:11px;border-radius:50%;background:var(--bd);cursor:pointer;transition:.3s}
+#dots i.a{background:#2f6df6;transform:scale(1.35)}
+#dots i.p{background:#12a37f}
+.hint{text-align:center;font-size:13px;opacity:.65;margin-top:8px}
+.emb body{background:transparent}.emb .wrap{padding:0;max-width:none}.emb #frame{aspect-ratio:auto;height:100vh;border-radius:0;border:0}.emb .hint{display:none}.emb .ctl{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);margin:0;z-index:5;padding:5px 8px;border-radius:14px;background:#ffffffcc;backdrop-filter:blur(4px)}.emb .ctl button,.emb .ctl select{padding:5px 11px;font-size:13px}.emb #dots{display:none}
+@media (prefers-reduced-motion:reduce){.pth,.n.on,#open{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="frame"><div id="stage">
+<h1>Verification Sandbox</h1>
+<div class="sb"></div>
+<div id="cap"><h2></h2><p></p><div id="nx"></div></div>
+<svg id="sv">
+<path class="pth" id="i1" d="M205 225 C225 225 225 205 240 205"/>
+<path class="pth" id="k1" d="M325 275 L325 295"/>
+<path class="pth" id="k2" d="M410 380 L430 380"/>
+<path class="pth" id="k3" d="M595 240 L615 240"/>
+<path class="pth" id="k4" d="M742 350 L742 370"/>
+<path class="pth" id="k5" d="M870 432 L890 432"/>
+<path class="pth" id="k5b" d="M870 240 L890 240"/>
+<path class="pth" id="k6" d="M1040 300 C1058 300 1058 250 1075 250"/>
+<path class="pth" id="k7" d="M1167 365 L1167 395"/>
+<g id="pk"></g><g id="fx"></g>
+</svg>
+</div></div>
+<div class="ctl">
+<button id="prev" aria-label="Previous step">Back</button>
+<button id="play">Play</button>
+<button id="next" aria-label="Next step">Next</button>
+<div id="dots"></div>
+<button id="rst">Restart</button>
+<select id="spd" aria-label="Speed"><option value=".7">Slow</option><option value="1" selected>Normal</option><option value="1.6">Fast</option></select>
+<button id="fs">Fullscreen</button>
+</div>
+<div class="hint">Click the diagram to go one step forward. The arrow keys work too, and Auto-play runs the whole thing by itself.</div>
+</div>
+<script>
+const NS="http://www.w3.org/2000/svg",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const N=[
+{id:'fr',k:'fr',c:'#b87f00',x:225,y:80,w:830,h:440,t:'Ephemeral Docker container, destroyed after every run',s:[]},
+{id:'in',c:'#51608a',x:30,y:110,w:175,h:230,t:'Inputs',s:['Code snapshot of the PR','Finding to confirm (from Security or Performance)','Candidate patch (from the RAG Agent)','Required tests + assumptions']},
+{id:'md',c:'#51608a',x:30,y:360,w:175,h:100,t:'Run mode',s:['A: confirm the finding','B: verify the patch']},
+{id:'ct',c:'#2f6df6',x:240,y:135,w:170,h:140,t:'1 Container (Docker)',s:['Build a throwaway image','Copy in the code','Start it']},
+{id:'en',c:'#e8643a',x:240,y:295,w:170,h:170,t:'2 Runtime Security Enforcer',s:['No network','CPU + memory caps','Execution timeout','Kill the run on a breach']},
+{id:'ig',c:'#7c4dff',x:430,y:135,w:165,h:300,t:'3 Deterministic Input Generator',s:['Seeded, rule-based inputs','Growing sizes for performance','Test inputs for the finding','Same inputs before and after','No LLM picks what runs']},
+{id:'ex',c:'#12a37f',x:615,y:135,w:255,h:215,t:'4 Dual-Pillar Executor',l1:'Security pillar',s:['Re-run Semgrep','Replay the exploit input'],l2:'Performance pillar',s2:['Profile at growing sizes','Fit the growth curve','Track time + memory']},
+{id:'og',c:'#0aa5c8',x:615,y:370,w:255,h:125,t:'4b Overfitting guard',s:['Existing tests (JUnit for Java)','Extra inputs the tests never cover','Behavior before vs after patch']},
+{id:'mx',c:'#b87f00',x:890,y:135,w:150,h:330,t:'5 Metrics Extractor + Cleanup',s:['Runtime + memory numbers','Test results','Scanner output','Compare with the baseline','Destroy the container']},
+{id:'out',c:'#14235c',x:1075,y:135,w:185,h:230,t:'Verdicts + evidence',s:['Finding: confirmed or false positive','Fix: verified, failed or uncertain','Runtime + memory metrics','Evidence for the RAG Agent']},
+{id:'ra',k:'opt',c:'#7c4dff',x:1075,y:395,w:185,h:110,t:'Back to the RAG Agent',s:['Final fix status goes on to the dashboard']}
+];
+$('#stage').insertAdjacentHTML('beforeend',N.map(n=>`<div class="n ${n.k||''}" id="${n.id}" style="--c:${n.c};left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px"><h3>${n.t}</h3>${n.b?`<div class="bd">${n.b}</div>`:''}${n.l1?`<div class="lb">${n.l1}</div>`:""}<ul class="sub s1">${n.s.map(s=>`<li>${s}`).join('')}</ul>${n.s2?`<div class="lb">${n.l2||""}</div><ul class="sub s2">${n.s2.map(s=>`<li>${s}`).join('')}</ul>`:''}${n.x_||''}${n.i?`<div class="iow"><div class="io"><b>IN</b>${n.i}</div><div class="io"><b>OUT</b>${n.o}</div></div>`:''}${n.id=='sbx'?'<div id="stamp"></div>':''}</div>`).join(''));
+$('#stage').appendChild($('#sv'));
+let tok=0,auto=false,running=false,speed=1,cur=0,fast=false;
+const sleep=ms=>fast?Promise.resolve():new Promise((res,rej)=>{const my=tok;let t=0,l=performance.now();(function f(n){if(my!==tok)return rej('x');t+=(n-l)*speed;l=n;t>=ms?res():requestAnimationFrame(f)})(l)});
+const act=id=>{const e=$('#'+id);e.classList.remove('done');e.classList.add('on')},fin=id=>{const e=$('#'+id);e.classList.remove('on');e.classList.add('done')};
+async function tick(id,sel='.s1',gap=360){for(const li of $$('#'+id+' '+sel+' li')){await sleep(gap);li.classList.add('t')}}
+function move(sym,col,pid,ms=950,delay=0){return new Promise(async(res,rej)=>{if(fast)return res();const my=tok,p=$('#'+pid),L=p.getTotalLength(),g=document.createElementNS(NS,'g');g.style.filter=`drop-shadow(0 0 9px ${col})`;g.innerHTML=`<circle r="17" fill="${col}" opacity=".3"/><circle r="12" fill="${col}"/><text y="5" text-anchor="middle" font-size="14">${sym}</text>`;g.setAttribute('transform','scale(0)');$('#pk').appendChild(g);
+try{if(delay)await sleep(delay)}catch(e){g.remove();return rej(e)}
+let t=0,l=performance.now();(function f(n){if(my!==tok){g.remove();return rej('x')}t+=(n-l)*speed;l=n;const k=Math.min(t/ms,1),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2,pt=p.getPointAtLength(L*e),s=k<.15?k/.15:k>.85?(1-k)/.15:1;g.setAttribute('transform',`translate(${pt.x} ${pt.y}) scale(${Math.max(s,.01)})`);if(k<1)requestAnimationFrame(f);else{g.remove();res()}})(l)})}
+function toast(txt,x,y,col){if(fast)return;const t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('fill',col);t.setAttribute('class','toast');t.textContent=txt;$('#fx').appendChild(t);setTimeout(()=>t.remove(),2000)}
+function confetti(){if(fast)return;const cs=['#2f6df6','#7c4dff','#e8643a','#12a37f','#b87f00'];for(let i=0;i<30;i++){const c=document.createElementNS(NS,'circle'),a=Math.random()*Math.PI*2,d=70+Math.random()*130;c.setAttribute('cx',1130);c.setAttribute('cy',650);c.setAttribute('r',3+Math.random()*4);c.setAttribute('fill',cs[i%5]);c.setAttribute('class','cf');c.style.setProperty('--dx',Math.cos(a)*d+'px');c.style.setProperty('--dy',Math.sin(a)*d-40+'px');$('#fx').appendChild(c);setTimeout(()=>c.remove(),1500)}}
+const stamp=t=>{const s=$('#stamp');if(t){s.textContent=t;s.classList.add('show')}else s.classList.remove('show')};
+const C={pr:'#51608a',idx:'#2f6df6',perf:'#e8643a',sec:'#12a37f',sbx:'#b87f00',rag:'#7c4dff',dash:'#0aa5c8',rep:'#14235c',app:'#5b6bd6'};
+const lit=(id,i,sel='.s1')=>{const l=$$('#'+id+' '+sel+' li')[i];l&&l.classList.add('t')};
+const rr=()=>['fr','ct','en','ig','ex','og','mx','out'].forEach(id=>{const e=$('#'+id);e.classList.remove('on','done');$$('#'+id+' li').forEach(l=>l.classList.remove('t'))});
+const mode=i=>$$('#md li').forEach((l,j)=>l.classList.toggle('t',j==i));const ins=a=>$$('#in li').forEach((l,j)=>l.classList.toggle('t',a.includes(j)));
+const S=[
+{t:'Ready when you are',c:'Click anywhere to follow the sandbox through its two jobs: confirming a finding, then testing a patch.',ns:[],run:async()=>{}},
+{t:'Two jobs, one pipeline',c:'The sandbox first checks whether a finding is real. Later it tests the patch from the RAG Agent. Both jobs use the same locked-down pipeline.<br><b>IN</b> PR code + finding from Security or Performance<br><b>OUT</b> job A: confirm the finding',ns:['in','md'],run:async()=>{act('in');lit('in',0);await sleep(450);lit('in',1);act('md');mode(0);await sleep(700)}},
+{t:'A throwaway container',c:'A fresh Docker container is built from the PR code. Nothing from an earlier run survives in it.<br><b>IN</b> code snapshot<br><b>OUT</b> isolated container',ns:['fr','ct'],run:async()=>{await move('🔍','#2f6df6','i1',700);act('fr');act('ct');await tick('ct','.s1',420);await sleep(300)}},
+{t:'Lock it down first',c:'Before anything runs, the enforcer shuts the network, caps CPU and memory and sets a timeout. A breach kills the run.<br><b>IN</b> isolated container<br><b>OUT</b> locked-down container',ns:['en'],run:async()=>{await move('🔒','#e8643a','k1',500);act('en');await tick('en','.s1',420);await sleep(300)}},
+{t:'Deterministic inputs',c:'Rule-based, seeded inputs are generated: growing sizes for performance, test inputs for the finding. No AI picks what runs, so every result can be repeated.<br><b>IN</b> finding + locked container<br><b>OUT</b> repeatable test inputs',ns:['ig'],run:async()=>{await move('🎲','#7c4dff','k2',500);act('ig');await tick('ig','.s1',380);await sleep(300)}},
+{t:'Both pillars run',c:'Security re-runs Semgrep and replays the exploit input. Performance profiles time and memory at growing sizes to see the real growth curve.<br><b>IN</b> test inputs<br><b>OUT</b> raw evidence',ns:['ex'],run:async()=>{await move('▶️','#12a37f','k3',500);act('ex');await Promise.all([tick('ex','.s1',500),tick('ex','.s2',420)]);await sleep(300)}},
+{t:'Collect, destroy, decide',c:'Numbers, test results and scanner output are collected, then the container is destroyed. The finding is confirmed or marked a false positive.<br><b>IN</b> raw evidence<br><b>OUT</b> finding verdict + metrics',ns:['ex','mx','out'],run:async()=>{await move('📊','#12a37f','k5b',400);act('mx');await tick('mx','.s1',330);toast('container destroyed',965,128,'#b87f00');await sleep(300);await move('✅','#b87f00','k6',700);act('out');lit('out',0);lit('out',2);toast('finding confirmed',1167,125,'#12a37f');await sleep(900)}},
+{t:'Round two: test the patch',c:'Later the RAG Agent hands over a candidate patch. The sandbox rebuilds a fresh container, locks it down and generates the same inputs, now with the patched code.<br><b>IN</b> handoff package: patch + required tests<br><b>OUT</b> job B: verify the patch',ns:['in','md','fr','ct','en','ig'],run:async()=>{rr();act('in');ins([0,2,3]);act('md');mode(1);toast('patch from the RAG Agent',117,100,'#7c4dff');await sleep(700);await move('🩹','#e8643a','i1',500);act('fr');act('ct');await tick('ct','.s1',150);await move('🔒','#e8643a','k1',350);act('en');await tick('en','.s1',150);await move('🎲','#7c4dff','k2',350);act('ig');await tick('ig','.s1',150);await sleep(300)}},
+{t:'Patched code, overfitting guard',c:'Both pillars run again on the patched code. The guard also runs the existing tests plus extra inputs the tests never cover, and compares behavior before and after. Passing the old tests alone is not enough.<br><b>IN</b> patched code + same inputs<br><b>OUT</b> before / after evidence',ns:['ex','og'],run:async()=>{await move('▶️','#12a37f','k3',450);act('ex');await Promise.all([tick('ex','.s1',350),tick('ex','.s2',300)]);await move('🛡️','#0aa5c8','k4',400);act('og');await tick('og','.s1',420);toast('before vs after',742,364,'#0aa5c8');await sleep(500)}},
+{t:'A verdict for the fix',c:'The patch is marked verified, failed or uncertain, with runtime and memory numbers. All of it goes back to the RAG Agent as evidence.<br><b>IN</b> before / after evidence<br><b>OUT</b> fix verdict + metrics + evidence',ns:['mx','out','ra'],run:async()=>{await move('📊','#0aa5c8','k5',400);act('mx');await tick('mx','.s1',250);await move('✅','#b87f00','k6',700);act('out');lit('out',1);lit('out',2);lit('out',3);toast('verified / failed / uncertain',1167,125,'#2f6df6');await sleep(500);await move('📨','#2f6df6','k7',450);act('ra');await tick('ra','.s1',500);confetti();await sleep(700)}},
+{t:'What it cannot promise',c:'No one can prove a patch is free of overfitting, and theory shows this is undecidable. The sandbox lowers that risk and answers uncertain when it cannot decide.<br><b>IN</b> a patch that looks right<br><b>OUT</b> an honest verdict, never a guess',ns:[],run:async()=>{act('og');await sleep(300);fin('og');toast('lower risk, not zero',742,364,'#51608a');await sleep(900)}}
+];
+async function rebuild(i){$$('.n').forEach(n=>n.classList.remove('on','done'));$$('.sub li').forEach(l=>l.classList.remove('t'));$('#fx').innerHTML='';$('#pk').innerHTML='';fast=true;try{for(let k=0;k<i;k++){await S[k].run();S[k].ns.forEach(fin)}}finally{fast=false}}
+const dots=$('#dots');S.forEach((s,i)=>{const d=document.createElement('i');d.title=s.t;d.onclick=()=>{auto=false;go(i)};dots.appendChild(d)});
+function upd(){$$('#dots i').forEach((d,i)=>{d.className=i==cur?'a':i<cur?'p':''});$('#cap h2').textContent=S[cur].t;$('#cap p').innerHTML=S[cur].c;$('#play').textContent=auto?'Pause':(cur==S.length-1&&!running?'Replay':'Auto-play');$('#nx').textContent=cur==S.length-1?'That is the whole journey. Click to start over.':'Click anywhere for the next step'}
+async function go(i){tok++;const my=tok;cur=Math.max(0,Math.min(S.length-1,i));await rebuild(cur);if(my!==tok)return;running=true;upd();
+try{await S[cur].run();if(my!==tok)return;S[cur].ns.forEach(fin);if(cur>=6&&cur<8)$$('#sbx .s2 li').forEach(l=>l.classList.add('t'));
+if(auto&&cur<S.length-1){await sleep(900);if(auto)return go(cur+1)}if(cur==S.length-1)auto=false;running=false;upd()}catch(e){}}
+$('#next').onclick=()=>{auto=false;go(cur+1)};$('#prev').onclick=()=>{auto=false;go(cur-1)};
+$('#rst').onclick=()=>{auto=false;go(0)};
+$('#play').onclick=()=>{if(auto){auto=false;upd();return}auto=true;if(cur==S.length-1&&!running||cur==0)go(1);else if(!running)go(cur+1);else upd()};
+$('#frame').onclick=()=>{auto=false;go(cur<S.length-1?cur+1:0)};
+$('#spd').onchange=e=>speed=+e.target.value;
+$('#fs').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('#frame').requestFullscreen()}catch(e){window.open(location.href,'_blank')}};
+addEventListener('keydown',e=>{if(e.key=='ArrowRight')$('#next').click();else if(e.key=='ArrowLeft')$('#prev').click();else if(e.key==' '&&e.target.tagName!='BUTTON'){e.preventDefault();$('#play').click()}else if(e.key=='r')$('#rst').click()});
+function fit(){const f=$('#frame'),s=Math.min(f.clientWidth/1280,f.clientHeight/720);$('#stage').style.transform=`scale(${s})`;$('#stage').style.left=(f.clientWidth-1280*s)/2+'px';$('#stage').style.top=(f.clientHeight-720*s)/2+'px'}
+if(self!==top)document.documentElement.classList.add('emb');new ResizeObserver(fit).observe($('#frame'));addEventListener('resize',fit);fit();upd();
+</script>
+</body>
+</html>
