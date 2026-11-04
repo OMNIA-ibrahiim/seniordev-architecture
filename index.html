@@ -43,7 +43,8 @@ h3{margin:0 0 7px;font:700 16px/1.15 "Space Grotesk",sans-serif;color:var(--c)}
 .n.on .cmt,.n.done .cmt{opacity:1}
 #stamp{position:absolute;right:-14px;top:-12px;padding:3px 10px;border:2px solid #b87f00;border-radius:8px;background:#fff6d6;color:#8a5f00;font:800 14px "Space Grotesk",sans-serif;transform:rotate(7deg) scale(0);transition:transform .35s cubic-bezier(.3,1.8,.5,1)}
 #stamp.show{transform:rotate(7deg) scale(1)}
-#cap{position:absolute;left:30px;top:528px;width:405px;height:160px;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid #c3d4f5;box-shadow:0 6px 18px #1b3a8a1f}
+#cap{position:absolute;left:30px;top:548px;width:405px;height:158px;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid #c3d4f5;box-shadow:0 6px 18px #1b3a8a1f}
+.opt{border-style:dashed}
 #nx{position:absolute;right:16px;bottom:10px;font-size:12.5px;font-weight:700;color:#2f6df6}
 #cap h2{margin:0 0 6px;font:700 19px "Space Grotesk",sans-serif;color:#14235c}
 #cap p{margin:0;font-size:14.5px;line-height:1.42;color:#41537f}
@@ -73,14 +74,17 @@ svg{position:absolute;left:0;top:0;width:1280px;height:720px;pointer-events:none
 <div class="sb">Follow one pull request from the first click to a verified fix.</div>
 <div id="cap"><h2></h2><p></p><div id="nx"></div></div>
 <svg id="sv">
-<path class="pth" id="a" d="M160 345 L200 345"/>
+<path class="pth" id="a0" d="M105 270 L105 320"/>
+<path class="pth" id="a" d="M180 405 L215 405"/>
 <path class="pth" id="b1" d="M410 345 C435 345 435 195 460 195"/>
 <path class="pth" id="b2" d="M410 345 C435 345 435 510 460 510"/>
 <path class="pth" id="c1" d="M690 195 C715 195 715 330 740 330"/>
 <path class="pth" id="c2" d="M690 530 C715 530 715 410 740 410"/>
 <path class="pth" id="d" d="M960 330 C985 330 985 200 1010 200"/>
 <path class="pth" id="e" d="M1010 270 C985 270 985 420 960 420"/>
-<path class="pth" id="f" d="M960 485 L1010 485"/>
+<path class="pth" id="f" d="M1130 370 L1130 400"/>
+<path class="pth" id="e2" d="M960 450 C985 450 985 330 1010 330"/>
+<path class="pth" id="o" d="M1010 520 C990 520 995 630 985 630"/>
 <path class="pth" id="g" d="M1130 570 L1130 600"/>
 <g id="pk"></g><g id="fx"></g>
 </svg>
@@ -99,16 +103,18 @@ svg{position:absolute;left:0;top:0;width:1280px;height:720px;pointer-events:none
 <script>
 const NS="http://www.w3.org/2000/svg",$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const N=[
-{id:'pr',c:'#51608a',x:30,y:290,w:130,h:112,t:'GitHub pull request',s:[],i:'new code pushed',o:'diff + repo',x_:'<button id="open">Open PR</button>'},
-{id:'idx',c:'#2f6df6',x:200,y:190,w:210,h:310,t:'1 Repository Indexing',s:['Diff Parser','AST Generator','Call Graph + Data Flow','Metadata Extractor'],i:'PR diff + repo',o:'one shared code graph that every module reuses'},
+{id:'pr',c:'#51608a',x:30,y:170,w:150,h:100,t:'GitHub pull request',s:[],x_:'<button id="open">Open PR</button>'},
+{id:'app',c:'#5b6bd6',x:30,y:320,w:150,h:215,t:'GitHub App + FastAPI backend',s:['Gets PR webhook','Runs pipeline','Saves to PostgreSQL'],i:'PR event',o:'diff + repo'},
+{id:'idx',c:'#2f6df6',x:215,y:190,w:195,h:310,t:'1 Repository Indexing',s:['Diff Parser','AST Generator','Call Graph + Data Flow','Metadata Extractor'],i:'PR diff + repo',o:'one shared code graph that every module reuses'},
 {id:'perf',c:'#e8643a',x:460,y:60,w:230,h:270,t:'2 Performance Analysis',s:['Feature Extractor','Complexity Classifier (fine-tuned)','Regression Detector'],i:'code graph',o:'complexity and regression flags, e.g. O(n) to O(n²)'},
 {id:'sec',c:'#12a37f',x:460,y:390,w:230,h:290,t:'3 Security Analysis',s:['Static Scanner (Semgrep)','Reachability Filter','Vulnerability Classifier (fine-tuned)','CWE / CVE Mapper'],i:'code graph',o:'reachable vulnerability findings with CWE labels'},
-{id:'sbx',c:'#b87f00',x:740,y:190,w:220,h:360,t:'5 Verification Sandbox',b:'no AI, fully deterministic',s:['Docker container','Runtime Security Enforcer','Deterministic Input Generator','Dual-Pillar Executor','Metrics Extractor + Cleanup'],s2:['Apply the patch + run tests','Re-scan with Semgrep','Profile on scaled inputs'],i:'flags + findings, later candidate fixes',o:'confirmed findings, verified fixes, metrics'},
-{id:'rag',c:'#7c4dff',x:1010,y:40,w:240,h:330,t:'4 RAG Agent',s:['Preprocessing (finding-scoped)','Planner','Retrieval (dense + lexical + graph)','Reranker','Evidence Checker (sufficient / abstain)','Generator + Confidence Estimator','Agent Tools'],i:'confirmed finding + evidence',o:'cited explanation + candidate fix'},
-{id:'dash',c:'#0aa5c8',x:1010,y:400,w:240,h:170,t:'6 Dashboard + CI/CD Gate',s:['Unified Findings View','Merge Gate Decision','Notifications (bonus)'],i:'explanation + fix status',o:'merge decision for the PR'},
-{id:'rep',c:'#14235c',x:1010,y:600,w:240,h:100,t:'Developer Report',s:[],x_:'<div class="cmt">Verified fix, O(n²) now O(n). 1 false positive dropped. (example)</div>'}
+{id:'sbx',c:'#b87f00',x:740,y:190,w:220,h:360,t:'5 Verification Sandbox',b:'no AI, fully deterministic',s:['Docker container','Runtime Security Enforcer','Deterministic Input Generator','Dual-Pillar Executor','Metrics Extractor + Cleanup'],s2:['Apply the patch + run tests','Re-scan with Semgrep','Profile on scaled inputs'],i:'flags + findings, later candidate fixes',o:'confirmed findings + fix verdicts (verified / failed / uncertain)'},
+{id:'rag',c:'#7c4dff',x:1010,y:40,w:240,h:330,t:'4 RAG Agent',s:['Preprocessing (finding-scoped)','Planner','Retrieval (dense + lexical + graph)','Reranker','Evidence Checker (sufficient / abstain)','Generator + Confidence Estimator','Agent Tools'],i:'confirmed finding + evidence, later fix verdicts',o:'cited explanation + candidate fix'},
+{id:'dash',c:'#0aa5c8',x:1010,y:400,w:240,h:170,t:'6 React Dashboard',s:['Repos + per-PR reports','Merge recommendation','Notifications (bonus)'],i:'explanation + fix status from the RAG Agent',o:'merge recommendation per PR'},
+{id:'rep',c:'#14235c',x:1010,y:600,w:240,h:100,t:'Developer Report',s:[],x_:'<div class="cmt">Verified fix, O(n²) now O(n). 1 false positive dropped. (example)</div>'},
+{id:'opt',k:'opt',c:'#51608a',x:720,y:565,w:265,h:140,t:'Optional, user switches on',s:['Merge gate: pass/fail check on the PR','Apply fix: you confirm the diff, then we open a separate branch']}
 ];
-$('#stage').insertAdjacentHTML('beforeend',N.map(n=>`<div class="n" id="${n.id}" style="--c:${n.c};left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px"><h3>${n.t}</h3>${n.b?`<div class="bd">${n.b}</div>`:''}<ul class="sub s1">${n.s.map(s=>`<li>${s}`).join('')}</ul>${n.s2?`<div class="lb">Then, for each proposed fix</div><ul class="sub s2">${n.s2.map(s=>`<li>${s}`).join('')}</ul>`:''}${n.x_||''}${n.i?`<div class="iow"><div class="io"><b>IN</b>${n.i}</div><div class="io"><b>OUT</b>${n.o}</div></div>`:''}${n.id=='sbx'?'<div id="stamp"></div>':''}</div>`).join(''));
+$('#stage').insertAdjacentHTML('beforeend',N.map(n=>`<div class="n ${n.k||''}" id="${n.id}" style="--c:${n.c};left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px"><h3>${n.t}</h3>${n.b?`<div class="bd">${n.b}</div>`:''}<ul class="sub s1">${n.s.map(s=>`<li>${s}`).join('')}</ul>${n.s2?`<div class="lb">Then, for each proposed fix</div><ul class="sub s2">${n.s2.map(s=>`<li>${s}`).join('')}</ul>`:''}${n.x_||''}${n.i?`<div class="iow"><div class="io"><b>IN</b>${n.i}</div><div class="io"><b>OUT</b>${n.o}</div></div>`:''}${n.id=='sbx'?'<div id="stamp"></div>':''}</div>`).join(''));
 $('#stage').appendChild($('#sv'));
 let tok=0,auto=false,running=false,speed=1,cur=0;
 const sleep=ms=>new Promise((res,rej)=>{const my=tok;let t=0,l=performance.now();(function f(n){if(my!==tok)return rej('x');t+=(n-l)*speed;l=n;t>=ms?res():requestAnimationFrame(f)})(l)});
@@ -120,32 +126,33 @@ let t=0,l=performance.now();(function f(n){if(my!==tok){g.remove();return rej('x
 function toast(txt,x,y,col){const t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('fill',col);t.setAttribute('class','toast');t.textContent=txt;$('#fx').appendChild(t);setTimeout(()=>t.remove(),2000)}
 function confetti(){const cs=['#2f6df6','#7c4dff','#e8643a','#12a37f','#b87f00'];for(let i=0;i<30;i++){const c=document.createElementNS(NS,'circle'),a=Math.random()*Math.PI*2,d=70+Math.random()*130;c.setAttribute('cx',1130);c.setAttribute('cy',650);c.setAttribute('r',3+Math.random()*4);c.setAttribute('fill',cs[i%5]);c.setAttribute('class','cf');c.style.setProperty('--dx',Math.cos(a)*d+'px');c.style.setProperty('--dy',Math.sin(a)*d-40+'px');$('#fx').appendChild(c);setTimeout(()=>c.remove(),1500)}}
 const stamp=t=>{const s=$('#stamp');if(t){s.textContent=t;s.classList.add('show')}else s.classList.remove('show')};
-const C={pr:'#51608a',idx:'#2f6df6',perf:'#e8643a',sec:'#12a37f',sbx:'#b87f00',rag:'#7c4dff',dash:'#0aa5c8',rep:'#14235c'};
+const C={pr:'#51608a',idx:'#2f6df6',perf:'#e8643a',sec:'#12a37f',sbx:'#b87f00',rag:'#7c4dff',dash:'#0aa5c8',rep:'#14235c',app:'#5b6bd6'};
 const S=[
 {t:'Ready when you are',c:'Click anywhere on the diagram to step through it. Each click sends the data one stage forward, and each card shows what goes in and what comes out.',ns:[],run:async()=>{}},
-{t:'A developer opens a pull request',c:'GitHub Actions fires a webhook and hands the diff and repo snapshot to SeniorDev.',ns:['pr'],run:async()=>{act('pr');await sleep(700);await move('🔀',C.pr,'a',800)}},
+{t:'A developer opens a pull request',c:'GitHub sends a webhook to the SeniorDev GitHub App. The FastAPI backend receives it, starts the pipeline and hands the diff to the indexer.',ns:['pr','app'],run:async()=>{act('pr');await sleep(600);await move('🔀',C.pr,'a0',700);act('app');await tick('app','.s1',380);await move('🔀',C.app,'a',700)}},
 {t:'The code is parsed once',c:'The diff becomes an AST, a call graph, a data-flow graph and metadata. Every later module reads this same shared graph.',ns:['idx'],run:async()=>{act('idx');await tick('idx');await sleep(500)}},
 {t:'Two specialists work in parallel',c:'Performance asks whether the code got slower. Security asks whether a vulnerability can really be reached from an entry point.',ns:['perf','sec'],run:async()=>{await Promise.all([move('🕸',C.idx,'b1'),move('🕸',C.idx,'b2')]);act('perf');act('sec');await Promise.all([tick('perf'),tick('sec')]);await sleep(400)}},
 {t:'The sandbox runs the code and decides',c:'No AI here. Docker runs real inputs, confirms genuine findings and drops false positives. Only confirmed findings move on, with their evidence.',ns:['sbx'],run:async()=>{await Promise.all([move('🐢',C.perf,'c1'),move('🛡',C.sec,'c2'),move('👻','#8d96c0','c2',950,260)]);act('sbx');await tick('sbx');toast('1 false positive dropped',850,170,'#d93b3b');await sleep(500);stamp('CONFIRMED');await sleep(900)}},
 {t:'The RAG agent explains and proposes a fix',c:'It retrieves code, call graph, CWE/CVE and test output for this one finding. If the evidence is not enough, it says so instead of guessing.',ns:['rag'],run:async()=>{stamp(null);await move('✅',C.sbx,'d');act('rag');await tick('rag','.s1',330);toast('evidence sufficient',1130,32,'#7c4dff');await sleep(700)}},
-{t:'Every fix is checked before anyone sees it',c:'The candidate fix goes back to the sandbox. It is patched in, tested, re-scanned and profiled. Only then is it marked verified.',ns:['sbx'],run:async()=>{await move('💡',C.rag,'e');act('sbx');await tick('sbx','.s2',520);stamp('VERIFIED');toast('fix passed all checks',850,170,'#b87f00');await sleep(1000)}},
-{t:'Results land in one dashboard',c:'Security and performance findings, explanations and verification status sit side by side. The merge gate decides whether the PR can go ahead.',ns:['dash'],run:async()=>{await move('📊',C.sbx,'f',700);act('dash');await tick('dash','.s1',420);await sleep(500)}},
-{t:'The developer gets a report on the PR',c:'A short, cited explanation and a fix status that was proven by execution. That is the point of SeniorDev.',ns:['rep'],run:async()=>{await move('📋',C.dash,'g',600);act('rep');confetti();await sleep(1200)}}
+{t:'Every fix is checked before anyone sees it',c:'The candidate fix goes back to the sandbox: patched in, tested, re-scanned and profiled. The verdict (verified, failed or uncertain) returns to the RAG Agent, which writes the final fix status.',ns:['sbx','rag'],run:async()=>{await move('💡',C.rag,'e');act('sbx');await tick('sbx','.s2',520);stamp('VERIFIED');toast('fix passed all checks',850,170,'#b87f00');await sleep(700);await move('🧾',C.sbx,'e2',800);act('rag');toast('writes the final fix status',1130,32,'#7c4dff');await sleep(800)}},
+{t:'Results land in one dashboard',c:'The RAG Agent sends the explanation and fix status to the React dashboard. The user sees their repos and each PR report there, with a merge recommendation.',ns:['dash'],run:async()=>{await move('📊',C.rag,'f',600);act('dash');await tick('dash','.s1',420);await sleep(500)}},
+{t:'The developer gets a report on the PR',c:'A short, cited explanation and a fix status that was proven by execution. That is the point of SeniorDev.',ns:['rep'],run:async()=>{await move('📋',C.dash,'g',600);act('rep');confetti();await sleep(1200)}},
+{t:'Optional extras the user switches on',c:'Both are off by default and each asks GitHub for its own permission. If either is off or fails, the analysis and the dashboard keep working normally.',ns:['opt'],run:async()=>{act('opt');await tick('opt','.s1',900);toast('core keeps working if these are off',850,556,'#51608a');await sleep(900)}}
 ];
 function rebuild(i){$$('.n').forEach(n=>n.classList.remove('on','done'));$$('.sub li').forEach(l=>l.classList.remove('t'));$('#fx').innerHTML='';$('#pk').innerHTML='';
 for(let k=0;k<i;k++)S[k].ns.forEach(id=>{fin(id);$$('#'+id+' .s1 li').forEach(l=>l.classList.add('t'));if(k>=6&&id=='sbx')$$('#sbx .s2 li').forEach(l=>l.classList.add('t'))});
 if(i>=7)stamp('VERIFIED');else if(i>=5)stamp('CONFIRMED');else stamp(null)}
 const dots=$('#dots');S.forEach((s,i)=>{const d=document.createElement('i');d.title=s.t;d.onclick=()=>{auto=false;go(i)};dots.appendChild(d)});
-function upd(){$$('#dots i').forEach((d,i)=>{d.className=i==cur?'a':i<cur?'p':''});$('#cap h2').textContent=S[cur].t;$('#cap p').textContent=S[cur].c;$('#play').textContent=auto?'Pause':(cur==S.length-1&&!running?'Replay':'Auto-play');$('#nx').textContent=cur==S.length-1?'That is the whole journey. Use Restart to replay.':'Click anywhere for the next step'}
+function upd(){$$('#dots i').forEach((d,i)=>{d.className=i==cur?'a':i<cur?'p':''});$('#cap h2').textContent=S[cur].t;$('#cap p').textContent=S[cur].c;$('#play').textContent=auto?'Pause':(cur==S.length-1&&!running?'Replay':'Auto-play');$('#nx').textContent=cur==S.length-1?'That is the whole journey. Click to start over.':'Click anywhere for the next step'}
 async function go(i){tok++;const my=tok;cur=Math.max(0,Math.min(S.length-1,i));rebuild(cur);running=true;upd();
 try{await S[cur].run();if(my!==tok)return;S[cur].ns.forEach(fin);if(cur>=6&&cur<8)$$('#sbx .s2 li').forEach(l=>l.classList.add('t'));
 if(auto&&cur<S.length-1){await sleep(900);if(auto)return go(cur+1)}if(cur==S.length-1)auto=false;running=false;upd()}catch(e){}}
 $('#next').onclick=()=>{auto=false;go(cur+1)};$('#prev').onclick=()=>{auto=false;go(cur-1)};
 $('#rst').onclick=()=>{auto=false;go(0)};
 $('#play').onclick=()=>{if(auto){auto=false;upd();return}auto=true;if(cur==S.length-1&&!running||cur==0)go(1);else if(!running)go(cur+1);else upd()};
-$('#frame').onclick=()=>{auto=false;if(cur<S.length-1)go(cur+1)};
+$('#frame').onclick=()=>{auto=false;go(cur<S.length-1?cur+1:0)};
 $('#spd').onchange=e=>speed=+e.target.value;
-$('#fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():$('#frame').requestFullscreen&&$('#frame').requestFullscreen();
+$('#fs').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('#frame').requestFullscreen()}catch(e){window.open(location.href,'_blank')}};
 addEventListener('keydown',e=>{if(e.key=='ArrowRight')$('#next').click();else if(e.key=='ArrowLeft')$('#prev').click();else if(e.key==' '&&e.target.tagName!='BUTTON'){e.preventDefault();$('#play').click()}else if(e.key=='r')$('#rst').click()});
 function fit(){const f=$('#frame'),s=Math.min(f.clientWidth/1280,f.clientHeight/720);$('#stage').style.transform=`scale(${s})`;$('#stage').style.left=(f.clientWidth-1280*s)/2+'px';$('#stage').style.top=(f.clientHeight-720*s)/2+'px'}
 if(self!==top)document.documentElement.classList.add('emb');new ResizeObserver(fit).observe($('#frame'));addEventListener('resize',fit);fit();upd();
